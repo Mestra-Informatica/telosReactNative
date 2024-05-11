@@ -1,11 +1,50 @@
 /* eslint-disable prettier/prettier */
 import React, { useState, useEffect } from 'react';
-import { ActivityIndicator, SafeAreaView, View, Image, Text, StyleSheet, TextInput, Switch, KeyboardAvoidingView, Platform, TouchableOpacity  } from 'react-native';
+import { ActivityIndicator, SafeAreaView, View, Image, Text, StyleSheet, TextInput, Switch, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { Icon } from '@rneui/themed';
 
-export default ({ navigation }) => {
+export default function Login({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isEnabled, setIsEnabled] = useState(false);
-  const [number, onChangeNumber] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [senha, setSenha] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = async () => {
+    const payload = {
+      login: {
+        u: "",
+        s: ""
+      },
+      param: {
+        cpf: cpf,
+        sen: senha,
+        acao: "logar"
+      }
+    };
+
+    try {
+      const requestOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      };
+
+      const response = await fetch('http://www.sysprev.com.br:8585/prevmobile-ws/rest/acesso/padrao', requestOptions);
+
+      if (!response.ok) {
+        throw new Error('Erro ao fazer requisição');
+      }
+      console.log(response)
+
+      const data = await response.json();
+      navigation.navigate('Menu', { dadosUsuario: data.result });
+    } catch (error) {
+      setError('CPF ou Senha inválidos.');
+    }
+  };
 
   useEffect(() => {
     setTimeout(() => {
@@ -19,47 +58,54 @@ export default ({ navigation }) => {
     navigation.navigate('TermoDeUso');
   }
 
-  function logar(){
-    navigation.navigate('Menu');
-  }
-
   return (
     <SafeAreaView style={styles.container}>
-        {isLoading ? (
-          <View style={[styles.container, styles.center]}>
-            <ActivityIndicator size="large" />
+      {isLoading ? (
+        <View style={[styles.container, styles.center]}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <KeyboardAvoidingView style={styles.flex1} behavior={Platform.OS === 'ios' ? 'padding' : null}>
+          <View style={styles.center}>
+            <View>
+              <Icon name='downcircleo' color='#517fa4' />
+            </View>
+
+            <Image style={styles.img} source={require('../img/logo.png')} />
+
+            <Text style={styles.texto}>Preencha seus dados pessoais para entrar</Text>
+
+            <TextInput style={styles.input} placeholder="Digite seu CPF" value={cpf} onChangeText={setCpf} keyboardType="numeric"/>
+
+            <TextInput style={styles.input} placeholder="Digite sua senha" value={senha} onChangeText={setSenha} secureTextEntry={true} />
+
+            <View style={styles.space}>
+              <Text style={styles.textoSwitch}>Guardar Meu CPF</Text>
+              <Switch
+                trackColor={{ false: '#767577', true: '#80c9c1' }}
+                thumbColor={isEnabled ? '#009787' : '#f4f3f4'}
+                onValueChange={toggleSwitch}
+                value={isEnabled}/>
+            </View>
+
+            {error ? <Text style={styles.textoError}>{error}</Text> : null}
+
+            <TouchableOpacity onPress={handleLogin} style={styles.button}>
+              <Text style={styles.buttonText}>Entrar</Text>
+            </TouchableOpacity>
+
+            <View style={styles.footer}>
+              <View style={styles.linha}/>
+              <TouchableOpacity onPress={termoDeUso}>
+                <Text style={styles.textoFooter}>Termo de Uso</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        ) : (
-          <KeyboardAvoidingView style={styles.flex1} behavior={Platform.OS === 'ios' ? 'padding' : null}>
-              <View style={styles.center}>
-                <Image style={styles.img} source={require('../img/logo.png')} />
-                <Text style={styles.texto}>Preencha seus dados pessoais para entrar</Text>
-                <TextInput style={styles.input} placeholder="Digite seu CPF" value={number} onChangeText={onChangeNumber} keyboardType="numeric"/>
-                <TextInput style={styles.input} placeholder="Digite sua senha" secureTextEntry={true} />
-                <View style={styles.space}>
-                    <Text style={styles.textoSwitch}>Guardar Meu CPF</Text>
-                    <Switch
-                      trackColor={{ false: '#767577', true: '#80c9c1' }}
-                      thumbColor={isEnabled ? '#009787' : '#f4f3f4'}
-                      onValueChange={toggleSwitch}
-                      value={isEnabled}/>
-                </View>
-                <TouchableOpacity onPress={logar}
-                    style={styles.button}>
-                    <Text style={styles.buttonText}>Entrar</Text>
-                </TouchableOpacity>
-                <View style={styles.footer}>
-                    <View style={styles.linha}/>
-                    <TouchableOpacity onPress={termoDeUso}>
-                      <Text style={styles.textoFooter}>Termo de Uso</Text>
-                    </TouchableOpacity>
-                </View>
-              </View>
-          </KeyboardAvoidingView>
-        )}
+        </KeyboardAvoidingView>
+      )}
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -82,6 +128,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 15,
     textAlign: 'center',
+  },
+  textoError: {
+    top: 20,
+    fontSize: 15,
+    textAlign: 'center',
+    color: 'red',
   },
   textoSwitch: {
     marginRight: '45%',
@@ -121,11 +173,11 @@ const styles = StyleSheet.create({
     padding: 10,
     top: '5%',
     borderRadius: 5,
-    width: '90%'
-    },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
-        fontSize: 20,
-    }
+    width: '90%',
+  },
+  buttonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 20,
+  },
 });

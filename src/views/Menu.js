@@ -1,10 +1,20 @@
 /* eslint-disable prettier/prettier */
 import React, { useState } from 'react';
 import { View, FlatList, StyleSheet, Text, TouchableOpacity  } from 'react-native';
-import { ListItem } from '@rneui/themed';
-import menu from '../data/menu';
+import Linha  from '../components/Linha';
+import MenuList  from '../components/MenuList';
 
-export default props => {
+export default function Menu({ route }) {
+    const { dadosUsuario } = route.params;
+
+    const informacoesParticipante = dadosUsuario.informacoesParticipante;
+    const nome = informacoesParticipante.length > 0 ? informacoesParticipante[0].nome : '';
+    const patrocinadora = informacoesParticipante.length > 0 ? informacoesParticipante[0].patrocinadora : '';
+    const matricula = informacoesParticipante.length > 0 ? informacoesParticipante[0].matricula : '';
+    const plano = informacoesParticipante.length > 0 ? informacoesParticipante[0].plano : '';
+    const situacao = informacoesParticipante.length > 0 ? informacoesParticipante[0].situacao : '';
+    const regimetributario = informacoesParticipante.length > 0 ? informacoesParticipante[0].regimetributario : '';
+
     const [isAccordionOpen, setIsAccordionOpen] = useState(false);
 
     function toggleAccordion() {
@@ -15,20 +25,17 @@ export default props => {
         return (
             <TouchableOpacity style={styles.container} onPress={toggleAccordion}>
                 <Text style={styles.participante}>PARTICIPANTE</Text>
-                <Text style={styles.nome}>ROBERTO LANDELL DE MOURA</Text>
+                <Text style={styles.nome}>{nome}</Text>
             </TouchableOpacity>
         );
     }
 
-    function getMenuItem({ item: menuItem }) {
-        return (
-            <ListItem bottomDivider onPress={() => props.navigation.navigate(menuItem.link)}>
-                <ListItem.Content>
-                    <ListItem.Title>{menuItem.name}</ListItem.Title>
-                </ListItem.Content>
-            </ListItem>
-        );
-    }
+    const dadosView = dadosUsuario.dadosView;
+    const menuItems = Object.values(dadosView).map((menu, index) => {
+        const menuEntries = Object.entries(menu);
+        const menuItem = menuEntries.map(([id, nome]) => ({ id, nome }));
+        return menuItem;
+    });
 
     return (
         <View>
@@ -44,21 +51,25 @@ export default props => {
                     </View>
 
                     <View style={styles.accordionContainer}>
-                        <Text style={styles.value}>TELOS</Text>
-                        <Text style={styles.value}>0000000001</Text>
-                        <Text style={styles.value}>PCV I- CNPB 1998006638</Text>
-                        <Text style={styles.value}>ATIVO PCV I</Text>
-                        <Text style={styles.value}>Tabela Regressiva Lei 11.053</Text>
+                        <Text style={styles.value}>{patrocinadora}</Text>
+                        <Text style={styles.value}>{matricula}</Text>
+                        <Text style={styles.value}>{plano}</Text>
+                        <Text style={styles.value}>{situacao}</Text>
+                        <Text style={styles.value}>{regimetributario}</Text>
                     </View>
                 </View>
             }
+
+            <Linha nomeLinha={'Menu'}/>
+
             <FlatList
-                keyExtractor={menuItem => menuItem.id.toString()}
-                data={menu}
-                renderItem={getMenuItem}/>
+            keyExtractor={(item, index) => index.toString()}
+            data={menuItems.flat()}
+            renderItem={({ item }) => <MenuList nomeMenu={item.nome} />}
+            />
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     container: {
